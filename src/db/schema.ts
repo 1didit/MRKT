@@ -88,7 +88,33 @@ export const orders = sqliteTable("orders", {
     .$defaultFn(() => new Date()),
 });
 
+export const users = sqliteTable("users", {
+  id: text("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  name: text("name").notNull().default(""),
+  role: text("role", { enum: ["admin", "client"] })
+    .notNull()
+    .default("client"),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
+export const sessions = sqliteTable("sessions", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
 export type ProductRow = typeof products.$inferSelect;
 export type ColorwayRow = typeof colorways.$inferSelect;
 export type VariantRow = typeof variants.$inferSelect;
 export type OrderRow = typeof orders.$inferSelect;
+export type UserRow = typeof users.$inferSelect;
+export type SessionRow = typeof sessions.$inferSelect;

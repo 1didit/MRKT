@@ -1,0 +1,80 @@
+{
+  "categories": {
+    "female": "Female",
+    "masculine": "Masculine",
+    "children": "Children's",
+    "home": "For The Home"
+  },
+  "actions": {
+    "search": "Search",
+    "account": "Cabinet",
+    "basket": "Basket",
+    "menu": "Menu",
+    "viewAll": "View all",
+    "discover": "Discover the collection",
+    "addToBasket": "Add to basket",
+    "added": "Added to basket",
+    "selectSize": "Please select a size",
+    "checkout": "Checkout",
+    "continueShopping": "Continue shopping",
+    "showFilters": "Show Filters & Sort"
+  },
+  "hero": {
+    "kicker": "New collection",
+    "title": "Quiet luxury in velour & cashmere",
+    "subtitle": "Loungewear suits for women, men and children — soft fabrics, considered cuts, the signature gold NEVA embroidery.",
+    "cta": "Discover the collection"
+  },
+  "home": {
+    "newCollection": "New collection",
+    "selectedPieces": "Selected pieces"
+  },
+  "catalog": {
+    "label": "Catalog",
+    "all": "All",
+    "subtitle": "Velour and cashmere loungewear suits — premium quality, complimentary delivery across Russia.",
+    "results": "{count} Results",
+    "empty": "No pieces in this category yet."
+  },
+  "product": {
+    "breadcrumb": "Catalog",
+    "colour": "Colour",
+    "size": "Size",
+    "onlyLeft": "Only {count} left",
+    "care": "Composition & care"
+  },
+  "cart": {
+    "title": "Basket",
+    "empty": "Your basket is empty.",
+    "continue": "Continue shopping",
+    "subtotal": "Subtotal",
+    "delivery": "Delivery",
+    "complimentary": "Complimentary",
+    "total": "Total",
+    "checkout": "Checkout",
+    "comingSoon": "Payment integration coming soon",
+    "remove": "Remove",
+    "size": "Size"
+  },
+  "footer": {
+    "contacts": "Contacts",
+    "shop": "Shop",
+    "buyers": "Buyers",
+    "social": "We are in social networks",
+    "telegram": "Telegram",
+    "rights": "All rights reserved.",
+    "madeIn": "Velour & cashmere, made in Russia."
+  },
+  "footerLinks": {
+    "catalog": "Catalog",
+    "about": "About NEVA Premium",
+    "blog": "Blog",
+    "requisites": "Requisites",
+    "contacts": "Contacts",
+    "shipping": "Delivery and payment",
+    "returns": "Exchange and return",
+    "care": "Composition and care",
+    "offer": "Public Offer",
+    "privacy": "Confidentiality"
+  }
+}

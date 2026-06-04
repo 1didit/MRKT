@@ -1,37 +1,37 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { SESSION_COOKIE, checkCredentials, createToken } from "@/lib/auth";
+import { createSession, destroySession } from "@/lib/auth/session";
+import { getUserByEmail } from "@/lib/auth/users";
+import { verifyPassword } from "@/lib/auth/password";
 
 export interface LoginState {
   error?: string;
 }
 
-export async function loginAction(
+export async function adminLoginAction(
   _prev: LoginState | undefined,
   formData: FormData,
 ): Promise<LoginState> {
-  const username = String(formData.get("username") ?? "").trim();
+  const email = String(formData.get("email") ?? "")
+    .trim()
+    .toLowerCase();
   const password = String(formData.get("password") ?? "");
 
-  if (!checkCredentials(username, password)) {
-    return { error: "Невірний логін або пароль" };
+  const user = await getUserByEmail(email);
+  if (
+    !user ||
+    user.role !== "admin" ||
+    !(await verifyPassword(user.passwordHash, password))
+  ) {
+    return { error: "Невірний email або пароль" };
   }
 
-  const store = await cookies();
-  store.set(SESSION_COOKIE, createToken(), {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 60 * 60 * 8,
-  });
+  await createSession(user.id);
   redirect("/admin");
 }
 
 export async function logoutAction(): Promise<void> {
-  const store = await cookies();
-  store.delete(SESSION_COOKIE);
+  await destroySession();
   redirect("/admin/login");
 }

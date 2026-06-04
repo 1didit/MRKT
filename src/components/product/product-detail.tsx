@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Check } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { formatPrice } from "@/lib/format";
@@ -10,6 +11,7 @@ import type { Product } from "@/lib/repositories";
 import { cn } from "@/lib/utils";
 
 export function ProductDetail({ product }: { product: Product }) {
+  const t = useTranslations();
   const add = useCart((s) => s.add);
   const [ci, setCi] = useState(0);
   const [size, setSize] = useState<string | null>(null);
@@ -38,7 +40,7 @@ export function ProductDetail({ product }: { product: Product }) {
     <div className="mx-auto max-w-[1400px] px-3 py-6 sm:px-5 sm:py-8">
       <nav className="mb-6 text-xs text-zinc-500">
         <Link href="/catalog" className="hover:text-zinc-900">
-          Catalog
+          {t("product.breadcrumb")}
         </Link>
         <span className="px-2">/</span>
         <span className="text-zinc-700">{product.name}</span>
@@ -87,7 +89,7 @@ export function ProductDetail({ product }: { product: Product }) {
           {product.colorways.length > 1 && (
             <div className="mt-6">
               <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">
-                Colour
+                {t("product.colour")}
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {product.colorways.map((c, i) => (
@@ -115,7 +117,7 @@ export function ProductDetail({ product }: { product: Product }) {
           {/* sizes */}
           <div className="mt-6">
             <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">
-              Size
+              {t("product.size")}
             </p>
             <div className="mt-2 flex flex-wrap gap-2">
               {variants.map((v) => {
@@ -131,7 +133,8 @@ export function ProductDetail({ product }: { product: Product }) {
                       out && "cursor-not-allowed text-zinc-300 line-through",
                       !out && size === v.size
                         ? "border-zinc-900 bg-zinc-900 text-white"
-                        : !out && "border-zinc-300 text-zinc-700 hover:border-zinc-900",
+                        : !out &&
+                            "border-zinc-300 text-zinc-700 hover:border-zinc-900",
                     )}
                   >
                     {v.size}
@@ -154,20 +157,20 @@ export function ProductDetail({ product }: { product: Product }) {
           >
             {added ? (
               <>
-                <Check size={16} /> Added to basket
+                <Check size={16} /> {t("actions.added")}
               </>
             ) : (
-              "Add to basket"
+              t("actions.addToBasket")
             )}
           </button>
           {!size && (
             <p className="mt-3 text-center text-xs text-zinc-400">
-              Please select a size
+              {t("actions.selectSize")}
             </p>
           )}
           {selectedVariant && selectedVariant.stock < 5 && (
             <p className="mt-3 text-center text-xs text-amber-600">
-              Only {selectedVariant.stock} left
+              {t("product.onlyLeft", { count: selectedVariant.stock })}
             </p>
           )}
 
@@ -185,7 +188,7 @@ export function ProductDetail({ product }: { product: Product }) {
           {product.care && (
             <details className="mt-6 border-t border-black/5 pt-6">
               <summary className="cursor-pointer list-none text-[11px] uppercase tracking-[0.18em] text-zinc-500">
-                Composition &amp; care
+                {t("product.care")}
               </summary>
               <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-zinc-600">
                 {product.care}

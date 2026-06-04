@@ -35,7 +35,7 @@ export const FOOTER_SECTIONS = [
 ] as const;
 
 export const SHOWROOM = {
-  name: "NEVA Premium — showroom",
-  address: "Saint Petersburg, Nevsky Prospekt 114, 2nd floor",
-  telegram: "https://t.me/nevapremium",
+  name: "ООО «НЕВА»",
+  address: "115035, г. Москва, ул. Большая Ордынка, д. 19, стр. 1",
+  telegram: "https://t.me/nevastore81",
 };

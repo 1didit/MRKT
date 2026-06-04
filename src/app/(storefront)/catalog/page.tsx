@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { SlidersHorizontal } from "lucide-react";
 import { ProductGrid } from "@/components/product/product-grid";
 import {
@@ -28,6 +29,7 @@ export default async function CatalogPage({
 }: {
   searchParams: Promise<{ category?: string }>;
 }) {
+  const t = await getTranslations();
   const { category } = await searchParams;
   const active = NAV_CATEGORIES.find((c) => c.slug === category);
   const [products, all] = await Promise.all([
@@ -37,7 +39,7 @@ export default async function CatalogPage({
 
   const tiles: CategoryTile[] = NAV_CATEGORIES.map((c) => ({
     slug: c.slug,
-    label: c.label,
+    label: t(`categories.${c.slug}`),
     image: all.find(MATCH[c.slug])?.primaryImage ?? null,
   }));
 
@@ -45,14 +47,13 @@ export default async function CatalogPage({
     <div className="mx-auto max-w-[1600px] px-3 py-8 sm:px-5">
       <header className="mb-6">
         <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">
-          Catalog
+          {t("catalog.label")}
         </p>
         <h1 className="mt-1 text-3xl font-semibold text-zinc-900 sm:text-4xl">
-          {active ? active.label : "All"}
+          {active ? t(`categories.${active.slug}`) : t("catalog.all")}
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-zinc-500">
-          Velour and cashmere loungewear suits — premium quality, complimentary
-          delivery across Russia.
+          {t("catalog.subtitle")}
         </p>
       </header>
 
@@ -63,16 +64,18 @@ export default async function CatalogPage({
           type="button"
           className="inline-flex items-center gap-2 rounded-full border border-zinc-300 px-4 py-2 text-sm text-zinc-800 transition-colors hover:bg-white cursor-pointer"
         >
-          <SlidersHorizontal size={15} /> Show Filters &amp; Sort
+          <SlidersHorizontal size={15} /> {t("actions.showFilters")}
         </button>
-        <span className="text-sm text-zinc-500">{products.length} Results</span>
+        <span className="text-sm text-zinc-500">
+          {t("catalog.results", { count: products.length })}
+        </span>
       </div>
 
       {products.length > 0 ? (
         <ProductGrid products={products} priorityCount={4} />
       ) : (
         <p className="py-20 text-center text-sm text-zinc-500">
-          No pieces in this category yet.
+          {t("catalog.empty")}
         </p>
       )}
     </div>

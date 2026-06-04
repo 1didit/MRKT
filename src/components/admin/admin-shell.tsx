@@ -21,7 +21,13 @@ const NAV = [
   { href: "/admin/categories", label: "Categories", icon: FolderTree },
 ];
 
-export function AdminShell({ children }: { children: React.ReactNode }) {
+export function AdminShell({
+  children,
+  userEmail,
+}: {
+  children: React.ReactNode;
+  userEmail?: string;
+}) {
   const pathname = usePathname();
   const isActive = (href: string, exact?: boolean) =>
     exact ? pathname === href : pathname.startsWith(href);
@@ -97,8 +103,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <div className="hidden items-center gap-2 rounded-lg border border-zinc-200 px-3 py-1.5 text-sm text-zinc-400 sm:flex">
               <Search size={15} /> Search…
             </div>
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-900 text-xs font-medium text-white">
-              A
+            <div
+              title={userEmail}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-900 text-xs font-medium text-white"
+            >
+              {(userEmail?.[0] ?? "A").toUpperCase()}
             </div>
           </div>
         </header>

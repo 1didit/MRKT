@@ -1,10 +1,10 @@
 "use client";
 
 import { useActionState } from "react";
-import { loginAction } from "@/lib/admin/auth-actions";
+import { adminLoginAction } from "@/lib/admin/auth-actions";
 
 export default function LoginPage() {
-  const [state, action, pending] = useActionState(loginAction, undefined);
+  const [state, action, pending] = useActionState(adminLoginAction, undefined);
 
   return (
     <div className="w-full max-w-sm">
@@ -23,15 +23,16 @@ export default function LoginPage() {
       >
         <div>
           <label
-            htmlFor="username"
+            htmlFor="email"
             className="mb-1.5 block text-xs font-medium text-zinc-600"
           >
-            Login
+            Email
           </label>
           <input
-            id="username"
-            name="username"
-            autoComplete="username"
+            id="email"
+            name="email"
+            type="email"
+            autoComplete="email"
             autoFocus
             className="h-11 w-full rounded-lg border border-zinc-300 px-3 text-sm outline-none transition-colors focus:border-zinc-900"
           />
@@ -53,9 +54,7 @@ export default function LoginPage() {
           />
         </div>
 
-        {state?.error && (
-          <p className="text-sm text-red-600">{state.error}</p>
-        )}
+        {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
 
         <button
           type="submit"
@@ -66,7 +65,7 @@ export default function LoginPage() {
         </button>
 
         <p className="text-center text-xs text-zinc-400">
-          Dev login: admin / 1234
+          Default admin: admin@neva.ru / admin1234
         </p>
       </form>
     </div>

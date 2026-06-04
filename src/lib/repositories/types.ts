@@ -111,5 +111,6 @@ export interface ProductRepository {
   delete(id: string): Promise<void>;
   setStatus(id: string, status: ProductStatus): Promise<void>;
   setFeatured(id: string, featured: boolean): Promise<void>;
+  setPrice(id: string, price: number): Promise<void>;
   updateVariantStock(variantId: string, stock: number): Promise<void>;
 }

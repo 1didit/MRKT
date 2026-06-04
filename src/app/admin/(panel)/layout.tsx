@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { Toaster } from "sonner";
-import { isAuthenticated } from "@/lib/auth";
+import { getSessionUser } from "@/lib/auth";
 import { AdminShell } from "@/components/admin/admin-shell";
 
 export const dynamic = "force-dynamic";
@@ -10,10 +10,11 @@ export default async function PanelLayout({
 }: {
   children: React.ReactNode;
 }) {
-  if (!(await isAuthenticated())) redirect("/admin/login");
+  const user = await getSessionUser();
+  if (!user || user.role !== "admin") redirect("/admin/login");
   return (
     <>
-      <AdminShell>{children}</AdminShell>
+      <AdminShell userEmail={user.email}>{children}</AdminShell>
       <Toaster richColors position="top-center" />
     </>
   );

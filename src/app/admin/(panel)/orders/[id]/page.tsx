@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { orders } from "@/db/schema";
 import { formatPrice } from "@/lib/format";
+import { OrderStatusSelect } from "@/components/admin/order-status-select";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,11 @@ export default async function OrderDetailPage({
         {order.customerName} · {order.customerEmail} ·{" "}
         {order.createdAt.toLocaleDateString("ru-RU")}
       </p>
+
+      <div className="mt-4 flex items-center gap-3">
+        <span className="text-sm text-zinc-500">Status</span>
+        <OrderStatusSelect id={order.id} status={order.status} />
+      </div>
 
       <div className="mt-6 rounded-xl border border-zinc-200 bg-white">
         <ul className="divide-y divide-zinc-100">

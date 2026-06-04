@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Menu, Search, ShoppingBag, User, X } from "lucide-react";
 import { NAV_CATEGORIES } from "@/lib/nav";
 import { selectCount, useCart } from "@/lib/cart";
 import { cn } from "@/lib/utils";
 
 export function SiteHeader() {
+  const t = useTranslations();
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const count = useCart(selectCount);
@@ -28,7 +30,7 @@ export function SiteHeader() {
       <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-3">
         <Link
           href="/"
-          aria-label="NEVA Premium home"
+          aria-label="NEVA Premium"
           className="pl-1 text-xl font-semibold tracking-[0.28em] text-zinc-900 sm:text-2xl"
         >
           NEVA
@@ -42,19 +44,19 @@ export function SiteHeader() {
               href={`/catalog?category=${c.slug}`}
               className="rounded-full px-4 py-2 text-sm text-zinc-700 transition-colors hover:bg-zinc-100"
             >
-              {c.label}
+              {t(`categories.${c.slug}`)}
             </Link>
           ))}
           <span className="mx-1 h-5 w-px bg-zinc-200" />
-          <Link href="/search" aria-label="Search" className={iconBtn}>
+          <Link href="/search" aria-label={t("actions.search")} className={iconBtn}>
             <Search size={17} />
           </Link>
-          <Link href="/account" aria-label="Cabinet" className={iconBtn}>
+          <Link href="/account" aria-label={t("actions.account")} className={iconBtn}>
             <User size={17} />
           </Link>
           <Link
             href="/cart"
-            aria-label="Basket"
+            aria-label={t("actions.basket")}
             className={cn(iconBtn, "relative")}
           >
             <ShoppingBag size={17} />
@@ -71,14 +73,14 @@ export function SiteHeader() {
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
-            aria-label={open ? "Close menu" : "Open menu"}
+            aria-label={open ? "Close" : t("actions.menu")}
             className={iconBtn}
           >
             {open ? <X size={18} /> : <Menu size={18} />}
           </button>
           <Link
             href="/cart"
-            aria-label="Basket"
+            aria-label={t("actions.basket")}
             className={cn(iconBtn, "relative")}
           >
             <ShoppingBag size={17} />
@@ -102,18 +104,18 @@ export function SiteHeader() {
                 onClick={() => setOpen(false)}
                 className="border-b border-black/5 py-4 text-2xl font-medium text-zinc-900"
               >
-                {c.label}
+                {t(`categories.${c.slug}`)}
               </Link>
             ))}
             <div className="mt-6 flex flex-col gap-4 text-sm text-zinc-600">
               <Link href="/search" onClick={() => setOpen(false)}>
-                Search
+                {t("actions.search")}
               </Link>
               <Link href="/account" onClick={() => setOpen(false)}>
-                Cabinet
+                {t("actions.account")}
               </Link>
               <Link href="/cart" onClick={() => setOpen(false)}>
-                Basket
+                {t("actions.basket")}
               </Link>
             </div>
           </nav>

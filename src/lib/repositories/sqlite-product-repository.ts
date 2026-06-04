@@ -252,6 +252,13 @@ export class SqliteProductRepository implements ProductRepository {
       .where(eq(products.id, id));
   }
 
+  async setPrice(id: string, price: number): Promise<void> {
+    await db
+      .update(products)
+      .set({ basePrice: Math.max(0, Math.round(price)), updatedAt: new Date() })
+      .where(eq(products.id, id));
+  }
+
   async updateVariantStock(variantId: string, stock: number): Promise<void> {
     await db.update(variants).set({ stock }).where(eq(variants.id, variantId));
   }

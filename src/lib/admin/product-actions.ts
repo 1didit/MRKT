@@ -6,7 +6,7 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { productRepo } from "@/lib/repositories";
-import { isAuthenticated } from "@/lib/auth";
+import { isAdmin } from "@/lib/auth";
 
 const variantSchema = z.object({
   size: z.string().min(1),
@@ -55,7 +55,7 @@ function revalidateCatalog() {
 export async function createProductAction(
   input: unknown,
 ): Promise<ProductActionResult> {
-  if (!(await isAuthenticated())) return { ok: false, error: "Unauthorized" };
+  if (!(await isAdmin())) return { ok: false, error: "Unauthorized" };
   const parsed = productSchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid data" };
@@ -69,7 +69,7 @@ export async function updateProductAction(
   id: string,
   input: unknown,
 ): Promise<ProductActionResult> {
-  if (!(await isAuthenticated())) return { ok: false, error: "Unauthorized" };
+  if (!(await isAdmin())) return { ok: false, error: "Unauthorized" };
   const parsed = productSchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid data" };
@@ -82,7 +82,7 @@ export async function updateProductAction(
 export async function deleteProductAction(
   id: string,
 ): Promise<ProductActionResult> {
-  if (!(await isAuthenticated())) return { ok: false, error: "Unauthorized" };
+  if (!(await isAdmin())) return { ok: false, error: "Unauthorized" };
   await productRepo.delete(id);
   revalidateCatalog();
   return { ok: true, id };
@@ -98,7 +98,7 @@ const IMAGE_TYPES: Record<string, string> = {
 export async function uploadImagesAction(
   formData: FormData,
 ): Promise<{ ok: true; urls: string[] } | { ok: false; error: string }> {
-  if (!(await isAuthenticated())) return { ok: false, error: "Unauthorized" };
+  if (!(await isAdmin())) return { ok: false, error: "Unauthorized" };
   const files = formData.getAll("files").filter((f): f is File => f instanceof File);
   const urls: string[] = [];
   for (const file of files) {

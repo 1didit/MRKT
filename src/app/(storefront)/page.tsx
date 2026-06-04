@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Hero } from "@/components/home/hero";
 import { CategoryStrip, type CategoryTile } from "@/components/home/category-strip";
 import { ProductGrid } from "@/components/product/product-grid";
+import { getTranslations } from "next-intl/server";
 import { getActiveProducts, getFeatured } from "@/lib/catalog";
 import { NAV_CATEGORIES } from "@/lib/nav";
 import type { ProductSummary } from "@/lib/repositories";
@@ -16,6 +17,7 @@ const MATCH: Record<string, (p: ProductSummary) => boolean> = {
 };
 
 export default async function Home() {
+  const t = await getTranslations();
   const [featured, all] = await Promise.all([
     getFeatured(8),
     getActiveProducts(),
@@ -23,7 +25,7 @@ export default async function Home() {
 
   const tiles: CategoryTile[] = NAV_CATEGORIES.map((c) => ({
     slug: c.slug,
-    label: c.label,
+    label: t(`categories.${c.slug}`),
     image: all.find(MATCH[c.slug])?.primaryImage ?? null,
   }));
 
