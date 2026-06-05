@@ -56,7 +56,11 @@ export function CheckoutForm({
     });
     if (res.ok) {
       clear();
-      router.push(`/checkout/success?order=${res.number}`);
+      if (res.confirmationUrl) {
+        window.location.href = res.confirmationUrl;
+      } else {
+        router.push(`/checkout/success?order=${res.number}`);
+      }
     } else {
       setError(res.error);
       setSubmitting(false);

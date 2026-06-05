@@ -83,6 +83,7 @@ export const orders = sqliteTable("orders", {
     .notNull()
     .default("new"),
   total: integer("total").notNull(),
+  paymentId: text("payment_id"),
   items: text("items", { mode: "json" })
     .$type<OrderItemSnapshot[]>()
     .notNull(),

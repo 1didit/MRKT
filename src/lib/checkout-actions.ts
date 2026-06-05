@@ -1,11 +1,14 @@
 "use server";
 
+import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { orders, type OrderItemSnapshot } from "@/db/schema";
 import { productRepo } from "@/lib/repositories";
+import { createPayment, isConfigured } from "@/lib/yookassa";
 
 const schema = z.object({
   name: z.string().min(1, "Enter your name"),
@@ -25,7 +28,7 @@ const schema = z.object({
 });
 
 export type CheckoutResult =
-  | { ok: true; id: string; number: string }
+  | { ok: true; id: string; number: string; confirmationUrl?: string }
   | { ok: false; error: string };
 
 export async function createOrderAction(
@@ -97,11 +100,35 @@ export async function createOrderAction(
     await productRepo.updateVariantStock(s.variantId, s.newStock);
   }
 
+  // Create a YooKassa payment if configured; otherwise the order stays "new".
+  let confirmationUrl: string | undefined;
+  if (isConfigured()) {
+    const h = await headers();
+    const host = h.get("x-forwarded-host") ?? h.get("host");
+    const proto = h.get("x-forwarded-proto") ?? "https";
+    if (host) {
+      const payment = await createPayment({
+        amount: total,
+        orderId: id,
+        orderNumber: number,
+        returnUrl: `${proto}://${host}/checkout/success?order=${encodeURIComponent(number)}`,
+        description: `NEVA Premium · order ${number}`,
+      });
+      if (payment) {
+        confirmationUrl = payment.confirmationUrl;
+        await db
+          .update(orders)
+          .set({ paymentId: payment.id })
+          .where(eq(orders.id, id));
+      }
+    }
+  }
+
   revalidatePath("/admin");
   revalidatePath("/admin/orders");
   revalidatePath("/account");
   revalidatePath("/");
   revalidatePath("/catalog");
 
-  return { ok: true, id, number };
+  return { ok: true, id, number, confirmationUrl };
 }
