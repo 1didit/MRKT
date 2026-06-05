@@ -42,6 +42,22 @@ export default async function OrderDetailPage({
         <OrderStatusSelect id={order.id} status={order.status} />
       </div>
 
+      {(order.customerPhone || order.shippingAddress) && (
+        <div className="mt-4 rounded-lg border border-zinc-200 bg-white p-4 text-sm text-zinc-600">
+          {order.customerPhone && (
+            <p>
+              <span className="text-zinc-400">Phone:</span> {order.customerPhone}
+            </p>
+          )}
+          {order.shippingAddress && (
+            <p className="mt-1">
+              <span className="text-zinc-400">Address:</span>{" "}
+              {order.shippingAddress}
+            </p>
+          )}
+        </div>
+      )}
+
       <div className="mt-6 rounded-xl border border-zinc-200 bg-white">
         <ul className="divide-y divide-zinc-100">
           {order.items.map((it, i) => (

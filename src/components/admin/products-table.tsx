@@ -4,12 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Copy, Search, Star, Trash2 } from "lucide-react";
+import { Copy, PackagePlus, RotateCcw, Search, Star, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
+  addStock,
   bulkProducts,
   deleteProduct,
   duplicateProduct,
+  restoreProduct,
   setProductFeatured,
   setProductPrice,
   setProductStatus,
@@ -37,17 +39,29 @@ const CATEGORY_MATCH: Record<string, (p: ProductSummary) => boolean> = {
   home: (p) => p.forHome,
 };
 
-export function ProductsTable({ products }: { products: ProductSummary[] }) {
+export function ProductsTable({
+  products,
+  deleted,
+  initialSearch = "",
+}: {
+  products: ProductSummary[];
+  deleted: ProductSummary[];
+  initialSearch?: string;
+}) {
   const router = useRouter();
   const [rows, setRows] = useState(products);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch);
   const [category, setCategory] = useState("all");
   const [status, setStatus] = useState("all");
   const [sort, setSort] = useState("updated");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [editingPrice, setEditingPrice] = useState<string | null>(null);
+  const [stockOpen, setStockOpen] = useState(false);
+  const [stockQty, setStockQty] = useState(10);
+  const [deletedQty, setDeletedQty] = useState<Record<string, number>>({});
 
   useEffect(() => setRows(products), [products]);
+  useEffect(() => setSearch(initialSearch), [initialSearch]);
 
   const patch = (id: string, p: Partial<ProductSummary>) =>
     setRows((rs) => rs.map((r) => (r.id === id ? { ...r, ...p } : r)));
@@ -56,7 +70,11 @@ export function ProductsTable({ products }: { products: ProductSummary[] }) {
     let list = rows;
     if (search.trim()) {
       const q = search.trim().toLowerCase();
-      list = list.filter((p) => p.name.toLowerCase().includes(q));
+      list = list.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          (p.colorName ?? "").toLowerCase().includes(q),
+      );
     }
     if (category !== "all") list = list.filter(CATEGORY_MATCH[category]);
     if (status !== "all") list = list.filter((p) => p.status === status);
@@ -113,9 +131,10 @@ export function ProductsTable({ products }: { products: ProductSummary[] }) {
   }
 
   async function onDelete(id: string) {
-    if (!confirm("Delete this product?")) return;
+    if (!confirm("Move this product to Deleted?")) return;
     setRows((rs) => rs.filter((r) => r.id !== id));
-    await run(() => deleteProduct(id), "Deleted");
+    await run(() => deleteProduct(id), "Moved to Deleted");
+    router.refresh();
   }
 
   async function onBulk(op: Parameters<typeof bulkProducts>[1]) {
@@ -134,6 +153,25 @@ export function ProductsTable({ products }: { products: ProductSummary[] }) {
     }
     setSelected(new Set());
     await run(() => bulkProducts(ids, op), "Updated");
+    router.refresh();
+  }
+
+  async function onRestore(id: string, qty: number) {
+    await run(
+      () => restoreProduct(id, Math.max(0, Math.round(qty))),
+      "Product restored",
+    );
+    router.refresh();
+  }
+
+  async function onAddStock() {
+    const ids = [...selected];
+    const qty = Math.max(1, Math.round(stockQty) || 0);
+    if (!ids.length || !qty) return;
+    if (!confirm(`Add ${qty} to every size of ${ids.length} product(s)?`)) return;
+    setStockOpen(false);
+    await run(() => addStock(ids, qty), `Added ${qty} to each size`);
+    router.refresh();
   }
 
   const control =
@@ -191,6 +229,41 @@ export function ProductsTable({ products }: { products: ProductSummary[] }) {
           <button onClick={() => onBulk("feature")} className="rounded px-2 py-1 hover:bg-zinc-100 cursor-pointer">Feature</button>
           <button onClick={() => onBulk("unfeature")} className="rounded px-2 py-1 hover:bg-zinc-100 cursor-pointer">Unfeature</button>
           <button onClick={() => onBulk("delete")} className="rounded px-2 py-1 text-red-600 hover:bg-red-50 cursor-pointer">Delete</button>
+
+          <div className="ml-auto flex items-center gap-2">
+            {stockOpen ? (
+              <>
+                <span className="text-xs text-zinc-500">Add to each size:</span>
+                <input
+                  type="number"
+                  min={1}
+                  value={stockQty}
+                  onChange={(e) => setStockQty(Number(e.target.value))}
+                  autoFocus
+                  className="h-8 w-20 rounded border border-zinc-300 px-2 text-sm outline-none focus:border-zinc-900"
+                />
+                <button
+                  onClick={onAddStock}
+                  className="rounded bg-zinc-900 px-2.5 py-1 text-xs font-medium text-white hover:bg-accent cursor-pointer"
+                >
+                  Add
+                </button>
+                <button
+                  onClick={() => setStockOpen(false)}
+                  className="rounded px-2 py-1 text-xs text-zinc-500 hover:bg-zinc-100 cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => setStockOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-md border border-zinc-300 px-2.5 py-1 text-xs text-zinc-700 hover:bg-zinc-100 cursor-pointer"
+              >
+                <PackagePlus size={14} /> Add stock
+              </button>
+            )}
+          </div>
         </div>
       )}
 
@@ -332,6 +405,71 @@ export function ProductsTable({ products }: { products: ProductSummary[] }) {
           </table>
         </div>
       </div>
+
+      {deleted.length > 0 && (
+        <div className="mt-10">
+          <h2 className="mb-3 text-sm font-semibold text-zinc-500">
+            Deleted ({deleted.length})
+          </h2>
+          <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
+            <table className="w-full text-sm">
+              <tbody className="divide-y divide-zinc-100">
+                {deleted.map((p) => (
+                  <tr key={p.id} className="hover:bg-zinc-50">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <span className="relative h-12 w-10 shrink-0 overflow-hidden rounded bg-zinc-100">
+                          {p.primaryImage && (
+                            <Image
+                              src={p.primaryImage}
+                              alt=""
+                              fill
+                              sizes="40px"
+                              className="object-cover opacity-70"
+                            />
+                          )}
+                        </span>
+                        <div>
+                          <span className="block font-medium text-zinc-700">
+                            {p.name}
+                          </span>
+                          <span className="block text-xs text-zinc-400">
+                            {p.colorName}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-2">
+                        <span className="text-xs text-zinc-500">Stock</span>
+                        <input
+                          type="number"
+                          min={0}
+                          value={deletedQty[p.id] ?? 10}
+                          onChange={(e) =>
+                            setDeletedQty((q) => ({
+                              ...q,
+                              [p.id]: Number(e.target.value),
+                            }))
+                          }
+                          className="h-8 w-16 rounded border border-zinc-300 px-2 text-center text-sm outline-none focus:border-zinc-900"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => onRestore(p.id, deletedQty[p.id] ?? 10)}
+                          className="inline-flex items-center gap-1.5 rounded-full bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent cursor-pointer"
+                        >
+                          <RotateCcw size={13} /> Return
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

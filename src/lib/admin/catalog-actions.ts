@@ -35,7 +35,16 @@ export async function setProductFeatured(id: string, featured: boolean) {
 
 export async function deleteProduct(id: string) {
   await guard();
-  await productRepo.delete(id);
+  await productRepo.softDelete(id);
+  revalidate();
+}
+
+export async function restoreProduct(id: string, qty?: number) {
+  await guard();
+  await productRepo.restore(id);
+  if (typeof qty === "number" && qty > 0) {
+    await productRepo.setStockAll(id, qty);
+  }
   revalidate();
 }
 
@@ -73,6 +82,14 @@ export async function duplicateProduct(id: string) {
   revalidate();
 }
 
+export async function addStock(ids: string[], qty: number) {
+  await guard();
+  const n = Math.max(0, Math.round(qty));
+  if (!n) return;
+  for (const id of ids) await productRepo.addStock(id, n);
+  revalidate();
+}
+
 export type BulkOp =
   | "active"
   | "draft"
@@ -84,7 +101,7 @@ export type BulkOp =
 export async function bulkProducts(ids: string[], op: BulkOp) {
   await guard();
   for (const id of ids) {
-    if (op === "delete") await productRepo.delete(id);
+    if (op === "delete") await productRepo.softDelete(id);
     else if (op === "feature") await productRepo.setFeatured(id, true);
     else if (op === "unfeature") await productRepo.setFeatured(id, false);
     else await productRepo.setStatus(id, op);

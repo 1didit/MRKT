@@ -36,11 +36,20 @@
     "results": "{count} Results",
     "empty": "No pieces in this category yet."
   },
+  "search": {
+    "title": "Search",
+    "placeholder": "Search for products…",
+    "results": "{count} results",
+    "empty": "Nothing found for “{q}”.",
+    "start": "Type to search the catalogue."
+  },
   "product": {
     "breadcrumb": "Catalog",
     "colour": "Colour",
     "size": "Size",
     "onlyLeft": "Only {count} left",
+    "inStock": "{count} in stock",
+    "maxInBasket": "Maximum available is in your basket",
     "care": "Composition & care"
   },
   "cart": {

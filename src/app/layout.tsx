@@ -18,6 +18,7 @@ const sans = Manrope({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://neva-premium.ru"),
+  robots: { index: false, follow: false },
   title: {
     default: "NEVA Premium — Velour & Cashmere Suits",
     template: "%s · NEVA Premium",

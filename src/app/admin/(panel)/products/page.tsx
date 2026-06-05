@@ -4,8 +4,16 @@ import { productRepo } from "@/lib/repositories";
 
 export const dynamic = "force-dynamic";
 
-export default async function ProductsPage() {
-  const products = await productRepo.list();
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q } = await searchParams;
+  const [products, deleted] = await Promise.all([
+    productRepo.list(),
+    productRepo.listDeleted(),
+  ]);
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -22,7 +30,11 @@ export default async function ProductsPage() {
         </Link>
       </div>
 
-      <ProductsTable products={products} />
+      <ProductsTable
+        products={products}
+        deleted={deleted}
+        initialSearch={q ?? ""}
+      />
     </div>
   );
 }

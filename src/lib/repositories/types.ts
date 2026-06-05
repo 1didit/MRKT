@@ -112,5 +112,10 @@ export interface ProductRepository {
   setStatus(id: string, status: ProductStatus): Promise<void>;
   setFeatured(id: string, featured: boolean): Promise<void>;
   setPrice(id: string, price: number): Promise<void>;
+  addStock(productId: string, qty: number): Promise<void>;
+  setStockAll(productId: string, qty: number): Promise<void>;
+  softDelete(id: string): Promise<void>;
+  restore(id: string): Promise<void>;
+  listDeleted(): Promise<ProductSummary[]>;
   updateVariantStock(variantId: string, stock: number): Promise<void>;
 }

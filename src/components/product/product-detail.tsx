@@ -2,28 +2,40 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Check } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { formatPrice } from "@/lib/format";
+import { RichText } from "@/components/rich-text";
 import type { Product } from "@/lib/repositories";
 import { cn } from "@/lib/utils";
 
 export function ProductDetail({ product }: { product: Product }) {
   const t = useTranslations();
   const add = useCart((s) => s.add);
+  const items = useCart((s) => s.items);
+  const [mounted, setMounted] = useState(false);
   const [ci, setCi] = useState(0);
   const [size, setSize] = useState<string | null>(null);
   const [added, setAdded] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   const colorway = product.colorways[ci] ?? product.colorways[0];
   const images = colorway?.images ?? [];
   const variants = colorway?.variants ?? [];
   const selectedVariant = variants.find((v) => v.size === size);
 
+  const inCart = mounted
+    ? items.find((i) => i.id === product.slug && i.size === size)?.qty ?? 0
+    : 0;
+  const canAdd =
+    !!selectedVariant && selectedVariant.stock > 0 && inCart < selectedVariant.stock;
+
   function onAdd() {
-    if (!size || !colorway) return;
+    if (!size || !colorway || !selectedVariant) return;
+    if (inCart >= selectedVariant.stock) return;
     add({
       id: product.slug,
       name: product.name,
@@ -31,6 +43,7 @@ export function ProductDetail({ product }: { product: Product }) {
       price: product.basePrice,
       image: images[0] ?? "",
       size,
+      maxStock: selectedVariant.stock,
     });
     setAdded(true);
     window.setTimeout(() => setAdded(false), 1800);
@@ -83,6 +96,13 @@ export function ProductDetail({ product }: { product: Product }) {
             <p className="mt-5 text-sm leading-relaxed text-zinc-600">
               {product.description}
             </p>
+          )}
+
+          {product.styleDescription && (
+            <RichText
+              html={product.styleDescription}
+              className="mt-5 text-sm leading-relaxed text-zinc-600"
+            />
           )}
 
           {/* colour switcher */}
@@ -147,11 +167,11 @@ export function ProductDetail({ product }: { product: Product }) {
           <button
             type="button"
             onClick={onAdd}
-            disabled={!size}
+            disabled={!canAdd}
             className={cn(
               "mt-6 inline-flex h-13 w-full items-center justify-center gap-2 rounded-full text-sm font-medium uppercase tracking-wide transition-colors",
-              size
-                ? "bg-zinc-900 text-white hover:bg-accent"
+              canAdd
+                ? "bg-zinc-900 text-white hover:bg-accent cursor-pointer"
                 : "cursor-not-allowed bg-zinc-200 text-zinc-400",
             )}
           >
@@ -163,16 +183,25 @@ export function ProductDetail({ product }: { product: Product }) {
               t("actions.addToBasket")
             )}
           </button>
-          {!size && (
+
+          {/* stock / hint line */}
+          {!size ? (
             <p className="mt-3 text-center text-xs text-zinc-400">
               {t("actions.selectSize")}
             </p>
-          )}
-          {selectedVariant && selectedVariant.stock < 5 && (
+          ) : selectedVariant && inCart >= selectedVariant.stock ? (
+            <p className="mt-3 text-center text-xs text-amber-600">
+              {t("product.maxInBasket")}
+            </p>
+          ) : selectedVariant && selectedVariant.stock <= 5 ? (
             <p className="mt-3 text-center text-xs text-amber-600">
               {t("product.onlyLeft", { count: selectedVariant.stock })}
             </p>
-          )}
+          ) : selectedVariant ? (
+            <p className="mt-3 text-center text-xs text-zinc-400">
+              {t("product.inStock", { count: selectedVariant.stock })}
+            </p>
+          ) : null}
 
           {product.details.length > 0 && (
             <ul className="mt-10 space-y-2 border-t border-black/5 pt-6 text-sm text-zinc-600">
@@ -190,9 +219,10 @@ export function ProductDetail({ product }: { product: Product }) {
               <summary className="cursor-pointer list-none text-[11px] uppercase tracking-[0.18em] text-zinc-500">
                 {t("product.care")}
               </summary>
-              <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-zinc-600">
-                {product.care}
-              </p>
+              <RichText
+                html={product.care}
+                className="mt-4 text-sm leading-relaxed text-zinc-600"
+              />
             </details>
           )}
         </div>

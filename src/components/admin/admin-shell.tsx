@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import {
   ExternalLink,
   FolderTree,
@@ -29,6 +30,8 @@ export function AdminShell({
   userEmail?: string;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [q, setQ] = useState("");
   const isActive = (href: string, exact?: boolean) =>
     exact ? pathname === href : pathname.startsWith(href);
 
@@ -100,9 +103,23 @@ export function AdminShell({
             NEVA
           </Link>
           <div className="ml-auto flex items-center gap-3">
-            <div className="hidden items-center gap-2 rounded-lg border border-zinc-200 px-3 py-1.5 text-sm text-zinc-400 sm:flex">
-              <Search size={15} /> Search…
-            </div>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                router.push(`/admin/products?q=${encodeURIComponent(q.trim())}`);
+              }}
+              className="hidden sm:flex"
+            >
+              <div className="flex items-center gap-2 rounded-lg border border-zinc-200 px-3 py-1.5 focus-within:border-zinc-400">
+                <Search size={15} className="text-zinc-400" />
+                <input
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="Search products…"
+                  className="w-40 bg-transparent text-sm text-zinc-700 outline-none placeholder:text-zinc-400"
+                />
+              </div>
+            </form>
             <div
               title={userEmail}
               className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-900 text-xs font-medium text-white"

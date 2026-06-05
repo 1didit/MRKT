@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Trash2 } from "lucide-react";
+import { Minus, Plus, Trash2 } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { formatPrice } from "@/lib/format";
 
@@ -12,6 +12,7 @@ export default function CartPage() {
   const t = useTranslations();
   const items = useCart((s) => s.items);
   const remove = useCart((s) => s.remove);
+  const setQty = useCart((s) => s.setQty);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
@@ -57,21 +58,51 @@ export default function CartPage() {
                         {item.name}
                       </p>
                       <p className="mt-0.5 text-xs text-zinc-500">
-                        {item.colorName} · {t("cart.size")} {item.size} ·{" "}
-                        {item.qty} ×
+                        {item.colorName} · {t("cart.size")} {item.size}
                       </p>
                     </div>
                     <p className="text-sm text-zinc-900">
                       {formatPrice(item.price * item.qty)}
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => remove(item.id, item.size)}
-                    className="mt-auto inline-flex w-fit items-center gap-1.5 text-xs text-zinc-500 transition-colors hover:text-zinc-900 cursor-pointer"
-                  >
-                    <Trash2 size={13} /> {t("cart.remove")}
-                  </button>
+
+                  <div className="mt-auto flex items-center justify-between pt-3">
+                    <div className="inline-flex items-center rounded-full border border-zinc-300">
+                      <button
+                        type="button"
+                        aria-label="Decrease quantity"
+                        onClick={() => setQty(item.id, item.size, item.qty - 1)}
+                        disabled={item.qty <= 1}
+                        className="flex h-8 w-8 items-center justify-center text-zinc-600 transition-colors hover:text-zinc-900 disabled:text-zinc-300 cursor-pointer disabled:cursor-not-allowed"
+                      >
+                        <Minus size={14} />
+                      </button>
+                      <span className="w-8 text-center text-sm tabular-nums">
+                        {item.qty}
+                      </span>
+                      <button
+                        type="button"
+                        aria-label="Increase quantity"
+                        onClick={() => setQty(item.id, item.size, item.qty + 1)}
+                        disabled={item.qty >= item.maxStock}
+                        className="flex h-8 w-8 items-center justify-center text-zinc-600 transition-colors hover:text-zinc-900 disabled:text-zinc-300 cursor-pointer disabled:cursor-not-allowed"
+                      >
+                        <Plus size={14} />
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => remove(item.id, item.size)}
+                      className="inline-flex items-center gap-1.5 text-xs text-zinc-500 transition-colors hover:text-zinc-900 cursor-pointer"
+                    >
+                      <Trash2 size={13} /> {t("cart.remove")}
+                    </button>
+                  </div>
+                  {item.qty >= item.maxStock && (
+                    <p className="mt-1 text-right text-[11px] text-amber-600">
+                      {t("product.onlyLeft", { count: item.maxStock })}
+                    </p>
+                  )}
                 </div>
               </li>
             ))}
@@ -95,12 +126,12 @@ export default function CartPage() {
                   {formatPrice(total)}
                 </span>
               </div>
-              <button
-                type="button"
+              <Link
+                href="/checkout"
                 className="mt-6 inline-flex h-13 w-full items-center justify-center rounded-full bg-zinc-900 text-sm font-medium uppercase tracking-wide text-white transition-colors hover:bg-accent cursor-pointer"
               >
                 {t("cart.checkout")}
-              </button>
+              </Link>
               <p className="mt-3 text-center text-[11px] text-zinc-500">
                 {t("cart.comingSoon")}
               </p>

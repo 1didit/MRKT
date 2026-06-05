@@ -25,6 +25,7 @@ export const products = sqliteTable("products", {
   details: text("details", { mode: "json" }).$type<string[]>().notNull(),
   seoTitle: text("seo_title"),
   seoDescription: text("seo_description"),
+  deletedAt: integer("deleted_at", { mode: "timestamp_ms" }),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .notNull()
     .$defaultFn(() => new Date()),
@@ -74,6 +75,8 @@ export const orders = sqliteTable("orders", {
   number: text("number").notNull(),
   customerName: text("customer_name").notNull(),
   customerEmail: text("customer_email").notNull(),
+  customerPhone: text("customer_phone").notNull().default(""),
+  shippingAddress: text("shipping_address").notNull().default(""),
   status: text("status", {
     enum: ["new", "paid", "processing", "shipped", "delivered", "cancelled"],
   })

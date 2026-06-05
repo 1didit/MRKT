@@ -6,6 +6,7 @@ import { clientLogoutAction } from "@/lib/auth/actions";
 import { db } from "@/db/client";
 import { orders } from "@/db/schema";
 import { formatPrice } from "@/lib/format";
+import { OrderReturnButton } from "@/components/order-return-button";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -22,6 +23,7 @@ const STATUS_STYLE: Record<string, string> = {
 export default async function AccountPage() {
   const user = await getSessionUser();
   if (!user) redirect("/account/login");
+  const isAdmin = user.role === "admin";
 
   const myOrders = await db
     .select()
@@ -78,12 +80,22 @@ export default async function AccountPage() {
                 key={o.id}
                 className="flex items-center justify-between gap-4 px-5 py-4"
               >
-                <div>
-                  <p className="text-sm font-medium text-zinc-900">{o.number}</p>
-                  <p className="text-xs text-zinc-400">
-                    {o.createdAt.toLocaleDateString("ru-RU")} · {o.items.length}{" "}
-                    item(s)
-                  </p>
+                <div className="flex items-center gap-3">
+                  {isAdmin && (
+                    <OrderReturnButton
+                      orderId={o.id}
+                      cancelled={o.status === "cancelled"}
+                    />
+                  )}
+                  <div>
+                    <p className="text-sm font-medium text-zinc-900">
+                      {o.number}
+                    </p>
+                    <p className="text-xs text-zinc-400">
+                      {o.createdAt.toLocaleDateString("ru-RU")} ·{" "}
+                      {o.items.length} item(s)
+                    </p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-4">
                   <span

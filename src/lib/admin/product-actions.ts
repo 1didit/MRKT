@@ -83,7 +83,7 @@ export async function deleteProductAction(
   id: string,
 ): Promise<ProductActionResult> {
   if (!(await isAdmin())) return { ok: false, error: "Unauthorized" };
-  await productRepo.delete(id);
+  await productRepo.softDelete(id);
   revalidateCatalog();
   return { ok: true, id };
 }

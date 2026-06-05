@@ -1,4 +1,14 @@
-import { and, desc, eq, inArray, like } from "drizzle-orm";
+import {
+  and,
+  desc,
+  eq,
+  inArray,
+  isNotNull,
+  isNull,
+  like,
+  sql,
+  type SQL,
+} from "drizzle-orm";
 import { nanoid } from "nanoid";
 import slugify from "slugify";
 import { db } from "@/db/client";
@@ -30,16 +40,23 @@ function categoryWhere(category?: string) {
 
 export class SqliteProductRepository implements ProductRepository {
   async list(params: ListParams = {}): Promise<ProductSummary[]> {
-    const conds = [];
+    const conds = [isNull(products.deletedAt)];
     if (params.search) conds.push(like(products.name, `%${params.search}%`));
     if (params.status) conds.push(eq(products.status, params.status));
     const catW = categoryWhere(params.category);
     if (catW) conds.push(catW);
+    return this.summaries(and(...conds));
+  }
 
+  async listDeleted(): Promise<ProductSummary[]> {
+    return this.summaries(isNotNull(products.deletedAt));
+  }
+
+  private async summaries(where: SQL | undefined): Promise<ProductSummary[]> {
     const rows = await db
       .select()
       .from(products)
-      .where(conds.length ? and(...conds) : undefined)
+      .where(where)
       .orderBy(desc(products.updatedAt));
 
     const ids = rows.map((r) => r.id);
@@ -86,7 +103,11 @@ export class SqliteProductRepository implements ProductRepository {
   private async assemble(
     where: ReturnType<typeof eq>,
   ): Promise<Product | null> {
-    const [p] = await db.select().from(products).where(where).limit(1);
+    const [p] = await db
+      .select()
+      .from(products)
+      .where(and(where, isNull(products.deletedAt)))
+      .limit(1);
     if (!p) return null;
     const cws = await db
       .select()
@@ -256,6 +277,44 @@ export class SqliteProductRepository implements ProductRepository {
     await db
       .update(products)
       .set({ basePrice: Math.max(0, Math.round(price)), updatedAt: new Date() })
+      .where(eq(products.id, id));
+  }
+
+  async addStock(productId: string, qty: number): Promise<void> {
+    const n = Math.round(qty);
+    if (n <= 0) return;
+    await db
+      .update(variants)
+      .set({ stock: sql`${variants.stock} + ${n}` })
+      .where(eq(variants.productId, productId));
+    await db
+      .update(products)
+      .set({ updatedAt: new Date() })
+      .where(eq(products.id, productId));
+  }
+
+  async setStockAll(productId: string, qty: number): Promise<void> {
+    await db
+      .update(variants)
+      .set({ stock: Math.max(0, Math.round(qty)) })
+      .where(eq(variants.productId, productId));
+    await db
+      .update(products)
+      .set({ updatedAt: new Date() })
+      .where(eq(products.id, productId));
+  }
+
+  async softDelete(id: string): Promise<void> {
+    await db
+      .update(products)
+      .set({ deletedAt: new Date(), updatedAt: new Date() })
+      .where(eq(products.id, id));
+  }
+
+  async restore(id: string): Promise<void> {
+    await db
+      .update(products)
+      .set({ deletedAt: null, status: "active", updatedAt: new Date() })
       .where(eq(products.id, id));
   }
 

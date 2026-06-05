@@ -7,6 +7,7 @@ import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { ImageUploader } from "@/components/admin/image-uploader";
+import { RichTextEditor } from "@/components/admin/rich-text-editor";
 import {
   createProductAction,
   deleteProductAction,
@@ -49,6 +50,15 @@ const input =
 const label = "mb-1.5 block text-xs font-medium text-zinc-600";
 const card = "rounded-xl border border-zinc-200 bg-white p-5";
 
+function toHtml(t: string): string {
+  if (!t) return "";
+  if (/<[a-z][\s\S]*>/i.test(t)) return t;
+  return t
+    .split(/\n{2,}/)
+    .map((p) => `<p>${p.trim().replace(/\n/g, "<br>")}</p>`)
+    .join("");
+}
+
 function deriveBaseSku(p?: Product): string {
   const sku = p?.colorways[0]?.variants[0]?.sku ?? "";
   return sku.split("-")[0] ?? "";
@@ -83,8 +93,8 @@ function toDefaults(p?: Product): ProductFormValues {
     slug: p.slug,
     baseSku: deriveBaseSku(p),
     description: p.description,
-    styleDescription: p.styleDescription,
-    care: p.care,
+    styleDescription: toHtml(p.styleDescription),
+    care: toHtml(p.care),
     details: (p.details.length ? p.details : [""]).map((value) => ({ value })),
     gender: p.gender,
     forHome: p.forHome,
@@ -290,18 +300,28 @@ export function ProductForm({ product }: { product?: Product }) {
               </div>
               <div>
                 <label className={label}>Style description</label>
-                <textarea
-                  {...register("styleDescription")}
-                  rows={4}
-                  className={cn(input, "h-auto py-2")}
+                <Controller
+                  control={control}
+                  name="styleDescription"
+                  render={({ field }) => (
+                    <RichTextEditor
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
               </div>
               <div>
                 <label className={label}>Composition &amp; care</label>
-                <textarea
-                  {...register("care")}
-                  rows={4}
-                  className={cn(input, "h-auto py-2")}
+                <Controller
+                  control={control}
+                  name="care"
+                  render={({ field }) => (
+                    <RichTextEditor
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
               </div>
 

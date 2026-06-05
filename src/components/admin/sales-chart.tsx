@@ -41,7 +41,7 @@ export function SalesChart({
         />
         <Tooltip
           cursor={{ stroke: "#e4e4e7" }}
-          formatter={(v: number) => [formatPrice(v), "Sales"]}
+          formatter={(v) => [formatPrice(Number(v)), "Sales"]}
           contentStyle={{
             borderRadius: 10,
             border: "1px solid #e4e4e7",
