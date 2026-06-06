@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { CheckCircle2 } from "lucide-react";
 import { db } from "@/db/client";
 import { orders } from "@/db/schema";
+import { getPayment } from "@/lib/yookassa";
 
 export const dynamic = "force-dynamic";
 
@@ -15,11 +16,28 @@ export default async function CheckoutSuccessPage({
   let paid = false;
   if (order) {
     const [o] = await db
-      .select({ status: orders.status })
+      .select({
+        id: orders.id,
+        status: orders.status,
+        paymentId: orders.paymentId,
+      })
       .from(orders)
       .where(eq(orders.number, order))
       .limit(1);
-    paid = o?.status === "paid";
+    if (o) {
+      paid = o.status === "paid";
+      // Confirm with YooKassa directly (works even before the webhook fires).
+      if (!paid && o.paymentId) {
+        const payment = await getPayment(o.paymentId);
+        if (payment?.status === "succeeded" && payment.paid) {
+          await db
+            .update(orders)
+            .set({ status: "paid" })
+            .where(eq(orders.id, o.id));
+          paid = true;
+        }
+      }
+    }
   }
 
   return (
