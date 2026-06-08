@@ -15,6 +15,7 @@ import {
 } from "@/lib/admin/product-actions";
 import { formatPrice } from "@/lib/format";
 import type { Product, ProductInput } from "@/lib/repositories";
+import { SUBCATEGORIES } from "@/lib/subcategories";
 import { cn } from "@/lib/utils";
 
 interface ColorwayValue {
@@ -35,10 +36,12 @@ interface ProductFormValues {
   gender: "women" | "men" | "kids";
   forHome: boolean;
   style: string;
+  subcategory: string;
   basePrice: number;
   compareAtPrice: number | null;
   status: "draft" | "active" | "archived";
   featured: boolean;
+  bestseller: boolean;
   seoTitle: string;
   seoDescription: string;
   sizes: string[];
@@ -77,10 +80,12 @@ function toDefaults(p?: Product): ProductFormValues {
       gender: "women",
       forHome: false,
       style: "",
+      subcategory: "",
       basePrice: 0,
       compareAtPrice: null,
       status: "active",
       featured: false,
+      bestseller: false,
       seoTitle: "",
       seoDescription: "",
       sizes: ["XS", "S", "M", "L", "XL"],
@@ -99,10 +104,12 @@ function toDefaults(p?: Product): ProductFormValues {
     gender: p.gender,
     forHome: p.forHome,
     style: p.style ?? "",
+    subcategory: p.subcategory ?? "",
     basePrice: p.basePrice,
     compareAtPrice: p.compareAtPrice,
     status: p.status,
     featured: p.featured,
+    bestseller: p.bestseller,
     seoTitle: p.seoTitle ?? "",
     seoDescription: p.seoDescription ?? "",
     sizes,
@@ -131,10 +138,12 @@ function toInput(v: ProductFormValues): ProductInput {
     gender: v.gender,
     forHome: v.forHome,
     style: v.style || null,
+    subcategory: v.subcategory || null,
     basePrice: Math.max(0, Number(v.basePrice) || 0),
     compareAtPrice: v.compareAtPrice ? Number(v.compareAtPrice) : null,
     status: v.status,
     featured: v.featured,
+    bestseller: v.bestseller,
     details: v.details.map((d) => d.value.trim()).filter(Boolean),
     seoTitle: v.seoTitle || null,
     seoDescription: v.seoDescription || null,
@@ -531,6 +540,17 @@ export function ProductForm({ product }: { product?: Product }) {
                 </select>
               </div>
               <div>
+                <label className={label}>Sub-category</label>
+                <select {...register("subcategory")} className={input}>
+                  <option value="">—</option>
+                  {SUBCATEGORIES.map((sc) => (
+                    <option key={sc.slug} value={sc.slug}>
+                      {sc.en}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
                 <label className={label}>Style tag</label>
                 <input {...register("style")} className={input} placeholder="basic" />
               </div>
@@ -541,6 +561,14 @@ export function ProductForm({ product }: { product?: Product }) {
               <label className="flex items-center gap-2 text-sm text-zinc-700">
                 <input type="checkbox" {...register("featured")} className="h-4 w-4" />
                 Featured on homepage
+              </label>
+              <label className="flex items-center gap-2 text-sm text-zinc-700">
+                <input
+                  type="checkbox"
+                  {...register("bestseller")}
+                  className="h-4 w-4"
+                />
+                Bestseller (Top sales)
               </label>
             </div>
           </section>

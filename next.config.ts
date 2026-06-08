@@ -5,7 +5,14 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
   // Optimized images keep a long cache so back/forward navigation is instant.
-  images: { minimumCacheTTL: 31536000 },
+  images: {
+    minimumCacheTTL: 31536000,
+    remotePatterns: [
+      { protocol: "https", hostname: "*.public.blob.vercel-storage.com" },
+      { protocol: "https", hostname: "*.tildacdn.com" },
+      { protocol: "https", hostname: "static.tildacdn.com" },
+    ],
+  },
   async headers() {
     const immutable = {
       key: "Cache-Control",

@@ -3,7 +3,7 @@ import { Hero } from "@/components/home/hero";
 import { CategoryStrip, type CategoryTile } from "@/components/home/category-strip";
 import { ProductGrid } from "@/components/product/product-grid";
 import { getTranslations } from "next-intl/server";
-import { getActiveProducts, getFeatured } from "@/lib/catalog";
+import { getActiveProducts, getBestsellers, getFeatured } from "@/lib/catalog";
 import { NAV_CATEGORIES } from "@/lib/nav";
 import type { ProductSummary } from "@/lib/repositories";
 
@@ -18,8 +18,9 @@ const MATCH: Record<string, (p: ProductSummary) => boolean> = {
 
 export default async function Home() {
   const t = await getTranslations();
-  const [featured, all] = await Promise.all([
+  const [featured, bestsellers, all] = await Promise.all([
     getFeatured(8),
+    getBestsellers(12),
     getActiveProducts(),
   ]);
 
@@ -54,6 +55,18 @@ export default async function Home() {
         </div>
         <ProductGrid products={featured} priorityCount={4} />
       </section>
+
+      {bestsellers.length > 0 && (
+        <section className="mx-auto max-w-[1600px] px-3 pb-12 sm:px-5 sm:pb-16">
+          <div className="mb-6">
+            <h2 className="text-2xl font-semibold text-zinc-900 sm:text-3xl">
+              {t("home.topSales")}
+            </h2>
+            <p className="mt-1 text-sm text-zinc-500">{t("home.topSalesSub")}</p>
+          </div>
+          <ProductGrid products={bestsellers} />
+        </section>
+      )}
     </>
   );
 }

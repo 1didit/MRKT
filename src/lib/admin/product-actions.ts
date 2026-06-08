@@ -3,6 +3,7 @@
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
+import { put } from "@vercel/blob";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { productRepo } from "@/lib/repositories";
@@ -107,10 +108,19 @@ export async function uploadImagesAction(
     if (file.size > 8 * 1024 * 1024) {
       return { ok: false, error: `${file.name} exceeds 8MB` };
     }
-    const name = `${randomUUID()}.${ext}`;
-    const buffer = Buffer.from(await file.arrayBuffer());
-    await writeFile(join(process.cwd(), "public", "uploads", name), buffer);
-    urls.push(`/uploads/${name}`);
+    if (process.env.BLOB_READ_WRITE_TOKEN) {
+      const blob = await put(`products/${randomUUID()}.${ext}`, file, {
+        access: "public",
+        contentType: file.type,
+        token: process.env.BLOB_READ_WRITE_TOKEN,
+      });
+      urls.push(blob.url);
+    } else {
+      const name = `${randomUUID()}.${ext}`;
+      const buffer = Buffer.from(await file.arrayBuffer());
+      await writeFile(join(process.cwd(), "public", "uploads", name), buffer);
+      urls.push(`/uploads/${name}`);
+    }
   }
   return { ok: true, urls };
 }

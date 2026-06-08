@@ -14,6 +14,11 @@ export async function getFeatured(limit = 8): Promise<ProductSummary[]> {
   return (featured.length ? featured : all).slice(0, limit);
 }
 
+export async function getBestsellers(limit = 12): Promise<ProductSummary[]> {
+  const all = await productRepo.list({ status: "active" });
+  return all.filter((p) => p.bestseller).slice(0, limit);
+}
+
 export function getProductBySlug(slug: string) {
   return productRepo.getBySlug(slug);
 }

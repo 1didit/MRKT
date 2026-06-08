@@ -16,12 +16,16 @@ export const products = sqliteTable("products", {
   gender: text("gender", { enum: ["women", "men", "kids"] }).notNull(),
   forHome: integer("for_home", { mode: "boolean" }).notNull().default(false),
   style: text("style"),
+  subcategory: text("subcategory"),
   basePrice: integer("base_price").notNull(),
   compareAtPrice: integer("compare_at_price"),
   status: text("status", { enum: ["draft", "active", "archived"] })
     .notNull()
     .default("active"),
   featured: integer("featured", { mode: "boolean" }).notNull().default(false),
+  bestseller: integer("bestseller", { mode: "boolean" })
+    .notNull()
+    .default(false),
   details: text("details", { mode: "json" }).$type<string[]>().notNull(),
   seoTitle: text("seo_title"),
   seoDescription: text("seo_description"),

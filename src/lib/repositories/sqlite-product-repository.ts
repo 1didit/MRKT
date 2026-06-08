@@ -45,6 +45,8 @@ export class SqliteProductRepository implements ProductRepository {
     if (params.status) conds.push(eq(products.status, params.status));
     const catW = categoryWhere(params.category);
     if (catW) conds.push(catW);
+    if (params.subcategory)
+      conds.push(eq(products.subcategory, params.subcategory));
     return this.summaries(and(...conds));
   }
 
@@ -78,8 +80,10 @@ export class SqliteProductRepository implements ProductRepository {
         name: r.name,
         status: r.status,
         featured: r.featured,
+        bestseller: r.bestseller,
         gender: r.gender,
         forHome: r.forHome,
+        subcategory: r.subcategory,
         basePrice: r.basePrice,
         compareAtPrice: r.compareAtPrice,
         colorName: pcws[0]?.colorName ?? null,
@@ -130,10 +134,12 @@ export class SqliteProductRepository implements ProductRepository {
       gender: p.gender,
       forHome: p.forHome,
       style: p.style,
+      subcategory: p.subcategory,
       basePrice: p.basePrice,
       compareAtPrice: p.compareAtPrice,
       status: p.status,
       featured: p.featured,
+      bestseller: p.bestseller,
       details: p.details,
       seoTitle: p.seoTitle,
       seoDescription: p.seoDescription,
@@ -173,10 +179,12 @@ export class SqliteProductRepository implements ProductRepository {
         gender: input.gender,
         forHome: input.forHome ?? false,
         style: input.style ?? null,
+        subcategory: input.subcategory ?? null,
         basePrice: input.basePrice,
         compareAtPrice: input.compareAtPrice ?? null,
         status: input.status ?? "active",
         featured: input.featured ?? false,
+        bestseller: input.bestseller ?? false,
         details: input.details ?? [],
         seoTitle: input.seoTitle ?? null,
         seoDescription: input.seoDescription ?? null,

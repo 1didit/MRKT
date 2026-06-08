@@ -60,6 +60,7 @@ export async function duplicateProduct(id: string) {
     gender: p.gender,
     forHome: p.forHome,
     style: p.style,
+    subcategory: p.subcategory,
     basePrice: p.basePrice,
     compareAtPrice: p.compareAtPrice,
     status: "draft",

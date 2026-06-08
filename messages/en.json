@@ -27,7 +27,9 @@
   },
   "home": {
     "newCollection": "New collection",
-    "selectedPieces": "Selected pieces"
+    "selectedPieces": "Selected pieces",
+    "topSales": "Top sales",
+    "topSalesSub": "Best sellers"
   },
   "catalog": {
     "label": "Catalog",

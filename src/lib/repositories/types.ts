@@ -28,10 +28,12 @@ export interface Product {
   gender: Gender;
   forHome: boolean;
   style: string | null;
+  subcategory: string | null;
   basePrice: number;
   compareAtPrice: number | null;
   status: ProductStatus;
   featured: boolean;
+  bestseller: boolean;
   details: string[];
   seoTitle: string | null;
   seoDescription: string | null;
@@ -46,8 +48,10 @@ export interface ProductSummary {
   name: string;
   status: ProductStatus;
   featured: boolean;
+  bestseller: boolean;
   gender: Gender;
   forHome: boolean;
+  subcategory: string | null;
   basePrice: number;
   compareAtPrice: number | null;
   colorName: string | null;
@@ -81,10 +85,12 @@ export interface ProductInput {
   gender: Gender;
   forHome?: boolean;
   style?: string | null;
+  subcategory?: string | null;
   basePrice: number;
   compareAtPrice?: number | null;
   status?: ProductStatus;
   featured?: boolean;
+  bestseller?: boolean;
   details?: string[];
   seoTitle?: string | null;
   seoDescription?: string | null;
@@ -94,6 +100,7 @@ export interface ProductInput {
 export interface ListParams {
   search?: string;
   category?: string; // female | masculine | children | home
+  subcategory?: string;
   status?: ProductStatus;
 }
 
