@@ -1,10 +1,11 @@
+import { HTML_RE, sanitizeRichHtml } from "@/lib/sanitize";
 import { cn } from "@/lib/utils";
-
-const HTML_RE = /<[a-z][\s\S]*>/i;
 
 /**
  * Renders product copy. New content from the Tiptap editor is HTML; legacy
- * seed content is plain text — fall back to preserving line breaks.
+ * seed content is plain text — fall back to preserving line breaks. HTML is
+ * re-sanitized here (idempotent) as a safety net even when callers already
+ * cleaned it at the data boundary.
  */
 export function RichText({
   html,
@@ -18,7 +19,7 @@ export function RichText({
     return (
       <div
         className={cn("richtext", className)}
-        dangerouslySetInnerHTML={{ __html: html }}
+        dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(html) }}
       />
     );
   }

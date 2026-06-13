@@ -1,14 +1,17 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { db } from "@/db/client";
-import { orders, type OrderItemSnapshot } from "@/db/schema";
+import { counters, orders, variants, type OrderItemSnapshot } from "@/db/schema";
 import { productRepo } from "@/lib/repositories";
 import { createPayment, isConfigured } from "@/lib/yookassa";
+
+/** Thrown inside the checkout transaction when a variant was bought out. */
+class OutOfStockError extends Error {}
 
 const schema = z.object({
   name: z.string().min(1, "Enter your name"),
@@ -42,7 +45,7 @@ export async function createOrderAction(
 
   // Rebuild the order from the DB — never trust client prices.
   const snapshots: OrderItemSnapshot[] = [];
-  const stockUpdates: { variantId: string; newStock: number }[] = [];
+  const stockUpdates: { variantId: string; qty: number; label: string }[] = [];
   let total = 0;
 
   for (const it of data.items) {
@@ -60,11 +63,9 @@ export async function createOrderAction(
         error: `Size ${it.size} unavailable for ${product.name}`,
       };
     }
+    const label = `${product.name} (${it.size})`;
     if (variant.stock < it.qty) {
-      return {
-        ok: false,
-        error: `Not enough stock: ${product.name} (${it.size})`,
-      };
+      return { ok: false, error: `Not enough stock: ${label}` };
     }
     const price = variant.priceOverride ?? product.basePrice;
     total += price * it.qty;
@@ -77,27 +78,52 @@ export async function createOrderAction(
       qty: it.qty,
       image: colorway.images[0] ?? "",
     });
-    stockUpdates.push({ variantId: variant.id, newStock: variant.stock - it.qty });
+    stockUpdates.push({ variantId: variant.id, qty: it.qty, label });
   }
 
-  const count = (await db.select({ id: orders.id }).from(orders)).length;
-  const number = `NP-${1001 + count}`;
   const id = nanoid();
 
-  await db.insert(orders).values({
-    id,
-    number,
-    customerName: data.name,
-    customerEmail: data.email.toLowerCase(),
-    customerPhone: data.phone,
-    shippingAddress: data.address,
-    status: "new",
-    total,
-    items: snapshots,
-  });
+  // Decrement stock, allocate the order number, and write the order atomically.
+  // The conditional UPDATE (stock >= qty) makes oversell impossible under
+  // concurrency; the counter RETURNING guarantees unique sequential numbers.
+  let number: string;
+  try {
+    number = await db.transaction(async (tx) => {
+      for (const u of stockUpdates) {
+        const res = await tx
+          .update(variants)
+          .set({ stock: sql`${variants.stock} - ${u.qty}` })
+          .where(
+            sql`${variants.id} = ${u.variantId} AND ${variants.stock} >= ${u.qty}`,
+          );
+        if (res.rowsAffected !== 1) {
+          throw new OutOfStockError(`Not enough stock: ${u.label}`);
+        }
+      }
 
-  for (const s of stockUpdates) {
-    await productRepo.updateVariantStock(s.variantId, s.newStock);
+      const [seq] = await tx
+        .update(counters)
+        .set({ value: sql`${counters.value} + 1` })
+        .where(eq(counters.id, "order_number"))
+        .returning({ value: counters.value });
+      const num = `NP-${seq?.value ?? Date.now()}`;
+
+      await tx.insert(orders).values({
+        id,
+        number: num,
+        customerName: data.name,
+        customerEmail: data.email.toLowerCase(),
+        customerPhone: data.phone,
+        shippingAddress: data.address,
+        status: "new",
+        total,
+        items: snapshots,
+      });
+      return num;
+    });
+  } catch (e) {
+    if (e instanceof OutOfStockError) return { ok: false, error: e.message };
+    throw e;
   }
 
   // Create a YooKassa payment if configured; otherwise the order stays "new".

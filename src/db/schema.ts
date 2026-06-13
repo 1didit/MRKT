@@ -96,6 +96,14 @@ export const orders = sqliteTable("orders", {
     .$defaultFn(() => new Date()),
 });
 
+// Atomic sequences (e.g. human-readable order numbers). Increment with
+// `UPDATE counters SET value = value + 1 ... RETURNING value` inside a tx so
+// concurrent checkouts can never collide.
+export const counters = sqliteTable("counters", {
+  id: text("id").primaryKey(),
+  value: integer("value").notNull().default(0),
+});
+
 export const users = sqliteTable("users", {
   id: text("id").primaryKey(),
   email: text("email").notNull().unique(),

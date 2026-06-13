@@ -18,12 +18,37 @@ const nextConfig: NextConfig = {
       key: "Cache-Control",
       value: "public, max-age=31536000, immutable",
     };
-    return [
-      // DEV/preview: block indexing at the header level (belt-and-suspenders with robots.ts).
+    const isProd = process.env.NODE_ENV === "production";
+    // Indexing stays OFF everywhere until the real launch flips ALLOW_INDEXING=true.
+    const allowIndex = process.env.ALLOW_INDEXING === "true";
+    const securityHeaders = [
+      // Block indexing on dev/preview (belt-and-suspenders with robots.ts).
+      ...(allowIndex
+        ? []
+        : [{ key: "X-Robots-Tag", value: "noindex, nofollow" }]),
+      // Anti-clickjacking (legacy + modern). The app is never framed.
+      { key: "X-Frame-Options", value: "DENY" },
+      { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+      // Block MIME-sniffing and limit referrer leakage.
+      { key: "X-Content-Type-Options", value: "nosniff" },
+      { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+      // We don't use these powerful features anywhere.
       {
-        source: "/:path*",
-        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+        key: "Permissions-Policy",
+        value: "camera=(), microphone=(), geolocation=(), browsing-topics=()",
       },
+      // HSTS only in production builds — never on localhost (would force https://localhost).
+      ...(isProd
+        ? [
+            {
+              key: "Strict-Transport-Security",
+              value: "max-age=63072000; includeSubDomains",
+            },
+          ]
+        : []),
+    ];
+    return [
+      { source: "/:path*", headers: securityHeaders },
       // Hashed media filenames never change → cache forever (no revalidation).
       { source: "/assets/:path*", headers: [immutable] },
       { source: "/uploads/:path*", headers: [immutable] },

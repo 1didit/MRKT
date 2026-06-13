@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ProductDetail } from "@/components/product/product-detail";
 import { getProductBySlug } from "@/lib/catalog";
+import { cleanRichText } from "@/lib/sanitize";
 
 export const dynamic = "force-dynamic";
 
@@ -29,5 +30,11 @@ export default async function ProductPage({
   const { slug } = await params;
   const product = await getProductBySlug(slug);
   if (!product) notFound();
-  return <ProductDetail product={product} />;
+  // Sanitize rich-text at the boundary so raw markup never reaches the client.
+  const safeProduct = {
+    ...product,
+    styleDescription: cleanRichText(product.styleDescription),
+    care: cleanRichText(product.care),
+  };
+  return <ProductDetail product={safeProduct} />;
 }
